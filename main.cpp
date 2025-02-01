@@ -1,4 +1,5 @@
 #include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <thread>
 using namespace std;
@@ -19,9 +20,8 @@ int main() {
             newstate = 1;
         else
             newstate = 2;
-        array<string, 3> sounds = {"/usr/share/sounds/gnome/default/alerts/click.ogg",
-                                   "usr/share/sounds/gnome/default/alerts/click.ogg",
-                                   "/usr/share/sounds/gnome/default/alerts/string.ogg"};
+        auto cwd = std::filesystem::current_path();
+        array<string, 3> sounds = {cwd / ".click.ogg", cwd / "click.ogg", cwd / "string.ogg"};
         auto msg = format("notify-send -a worktimer -u normal -e -t 10000 \"{}\" && paplay {}",
                           messages[newstate], sounds[newstate]);
         if (state != newstate)
