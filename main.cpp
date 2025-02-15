@@ -48,7 +48,7 @@ constexpr string trim(string s, const char *t = " \t\n\r\f\v") {
     return s;
 }
 void handle_event(int state, int newstate) {
-    array<string, 3> messages = {"Big rest", "Small rest", "Work"};
+    array<string, 4> messages = {"Big rest", "Small rest", "Work", "Nothing yet"};
     array<string, 3> sounds = {".click.ogg", "click.ogg", "string.ogg"};
     string actions = newstate == 2 or state == -1 ? "--action=Okay=Okay"
                                                   : "--action=Done=Done --action=Skipped=Skipped";
@@ -58,7 +58,7 @@ void handle_event(int state, int newstate) {
     exec(format("paplay {}", (filesystem::current_path() / sounds[newstate]).string()));
     auto res = exec(format("notify-send {} --action=Disable=Disable -a worktimer -u "
                            "critical -e -t 10000 \"{:02}:{:02} {} finished. {}\"",
-                           actions, h, m, messages[state], messages[newstate]));
+                           actions, h, m, messages[(state + 4) % 4], messages[newstate]));
     if (res) {
         store_action(trim(std::move(res.value())), t);
         if (state == 2 and res.value() != "Disable")
