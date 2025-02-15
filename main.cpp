@@ -24,6 +24,9 @@ optional<string> exec(const string &cmd) {
         result += buffer.data();
     return result;
 }
+void take_photo(auto name) {
+    exec(format("ffmpeg -i /dev/video0 -vframes 1 ~/Pictures/worktimer/{}.png", name));
+}
 void store_action(bool success, auto time) {
     time_t start = chrono::system_clock::to_time_t(time - 25min);
     time_t end = chrono::system_clock::to_time_t(time);
@@ -33,6 +36,7 @@ void store_action(bool success, auto time) {
     ofstream(filesystem::path(getenv("HOME")) / ".worklog", ios_base::app)
         << put_time(localtime(&start), "%Y-%m-%d") << put_time(localtime(&start), " %H:%M-")
         << put_time(localtime(&end), "%H:%M") << format(" [{}] CW \n", success ? "x" : " ");
+    take_photo((ostringstream() << put_time(localtime(&end), "%Y-%m-%d_%H:%M")).str());
 }
 bool handle_action(auto action, auto time) {
     cout << "Action: " << quoted(action) << endl;
@@ -74,8 +78,8 @@ int main() {
     while (run_flag) {
         auto [h, m, s] = GetHM();
         newstate = (h % 3 == 0 && m < 35) ? 0 : (m % 30 < 5) ? 1 : 2;
-        // newstate = 1;
-        // state = 2;
+        newstate = 1;
+        state = 2;
         if (state != newstate)
             thread(handle_event, state, newstate).detach();
         state = newstate;
