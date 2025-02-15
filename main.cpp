@@ -59,15 +59,15 @@ void handle_event(int state, int newstate) {
     string actions = newstate == 2 or state == -1 ? "--action=Okay=Okay"
                                                   : "--action=Done=Done --action=Skipped=Skipped";
     auto [h, m, s] = GetHM();
-    auto event_time = std::chrono::system_clock::now();
-    exec(format("paplay {}", (filesystem::current_path() / sounds[newstate]).string()));
+    auto event_time = chrono::system_clock::now();
+    auto sound_path =
+        filesystem::path(getenv("HOME")) / ".local/share/sounds/worktimer" / sounds[newstate];
+    exec(format("paplay {}", sound_path.string()));
     auto res = exec(format("notify-send {} --action=Disable=Disable -a worktimer -u "
                            "critical -e -t 10000 \"{:02}:{:02} {} finished. {}\"",
                            actions, h, m, messages[(state + 4) % 4], messages[newstate]));
     if (res and handle_action(trim(std::move(res.value())), event_time))
         exec("alacritty -e nvim -c 'normal! GA' ~/.worklog");
-    else
-        cout << "Something went wrong\n";
 }
 int main() {
     int state = -1, newstate = -1;
