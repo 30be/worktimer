@@ -78,8 +78,8 @@ int main() {
     while (run_flag) {
         auto [h, m, s] = GetHM();
         newstate = (h % 3 == 0 && m < 35) ? 0 : (m % 30 < 5) ? 1 : 2;
-        newstate = 1;
-        state = 2;
+        // newstate = 1;
+        // state = 2;
         if (state != newstate)
             thread(handle_event, state, newstate).detach();
         state = newstate;
