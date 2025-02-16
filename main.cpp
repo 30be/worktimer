@@ -36,7 +36,6 @@ void store_action(bool success, auto time) {
     ofstream(filesystem::path(getenv("HOME")) / ".worklog", ios_base::app)
         << put_time(localtime(&start), "%Y-%m-%d") << put_time(localtime(&start), " %H:%M-")
         << put_time(localtime(&end), "%H:%M") << format(" [{}] CW \n", success ? "x" : " ");
-    take_photo((ostringstream() << put_time(localtime(&end), "%Y-%m-%d_%H:%M")).str());
 }
 bool handle_action(auto action, auto time) {
     cout << "Action: " << quoted(action) << endl;
@@ -64,6 +63,8 @@ void handle_event(int state, int newstate) {
                                                   : "--action=Done=Done --action=Skipped=Skipped";
     auto [h, m, s] = GetHM();
     auto event_time = chrono::system_clock::now();
+    time_t end_time = chrono::system_clock::to_time_t(event_time);
+    take_photo((ostringstream() << put_time(localtime(&end_time), "%Y-%m-%d_%H:%M")).str());
     auto sound_path =
         filesystem::path(getenv("HOME")) / ".local/share/sounds/worktimer" / sounds[newstate];
     exec(format("paplay {}", sound_path.string()));
