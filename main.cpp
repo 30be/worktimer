@@ -14,10 +14,10 @@ auto GetHM() {
     return tuple{local_time->tm_hour, local_time->tm_min, local_time->tm_sec};
 }
 optional<string> exec(const string &cmd) {
-    cout << "Executing: " << quoted(cmd) << endl;
     array<char, 128> buffer;
     string result;
-    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.data(), "r"), pclose);
+    cout << "Executing: " << quoted(cmd) << endl;
+    auto pipe = unique_ptr<FILE, decltype(&pclose)>(popen(cmd.data(), "r"), pclose);
     if (!pipe)
         return nullopt;
     while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()))
