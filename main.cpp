@@ -25,7 +25,7 @@ optional<string> exec(const string &cmd) {
     return result;
 }
 void take_photo(auto name) {
-    exec(format("ffmpeg -i /dev/video0 -vframes 1 ~/Pictures/worktimer/{}.png", name));
+    exec(format("fswebcam -b --no-banner ~/Pictures/worktimer/{}.jpg", name));
 }
 void store_action(bool success, auto time) {
     time_t start = chrono::system_clock::to_time_t(time - 25min);
