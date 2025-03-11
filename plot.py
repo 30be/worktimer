@@ -5,6 +5,10 @@ import matplotlib.patches as patches
 import datetime
 import re
 from collections import defaultdict, Counter
+import numpy as np
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Rectangle
+import argparse
 
 matplotlib.use("TkAgg")
 
@@ -147,26 +151,8 @@ def plot_subjects(records):
     Matching is case-insensitive and subject entry may have multiple alternatives separated by |.
     Records that do not match any subject are counted under 'other'.
     """
-    subjects = [
-        "math",
-        "geometry",
-        "physics",
-        "chemistry",
-        "biology",
-        "history",
-        "geography",
-        "literature|russian",
-        "german",
-        "social",
-        "lw|lesswrong",
-        "rss|surf",
-        "anki|duolingo",
-        "code|coding|programming",
-        "writing",
-        "telegram|tg",
-        "youtube|yt",
-        "statistics|probability",
-    ]
+    with open("subjects") as f:
+        subjects = f.read().splitlines()
 
     subject_counts = defaultdict(int)
 
@@ -197,6 +183,94 @@ def plot_subjects(records):
     plt.show()
 
 
+def plot_habits(records):
+    """Make GitHub-like habit tracker for all the habits mentioned in habits file"""
+    # Read habits from the file
+    with open("habits") as f:
+        habits_list = [line.strip() for line in f if line.strip()]
+
+    # Handle case with no records
+    if not records:
+        print("No records to plot.")
+        return
+
+    # Determine all days in the range from min to max date
+    min_date = min(r.date for r in records)
+    max_date = max(r.date for r in records)
+    all_days = [min_date + datetime.timedelta(days=i) for i in range((max_date - min_date).days + 1)]
+
+    # Group records by day for efficiency
+    records_by_day = defaultdict(list)
+    for r in records:
+        records_by_day[r.date].append(r)
+
+    # Build a 2D array: rows = habits, columns = days
+    habits_data = []
+    for habit in habits_list:
+        # Create regex pattern for habit keywords (e.g., "exercise|workout")
+        pattern = r"\b(?:" + habit + r")\b"
+        row = []
+        for day in all_days:
+            day_records = records_by_day[day]
+            # Check if any record description matches the habit pattern
+            performed = (
+                any(re.search(pattern, r.description, re.IGNORECASE) for r in day_records) if day_records else False
+            )
+            row.append(1 if performed else 0)
+        habits_data.append(row)
+
+    # Convert to numpy array for easier handling
+    habits_array = np.array(habits_data)
+
+    # Define cell size and gap size
+    cell_size = 0.4  # Size of each cell in inches (adjust as needed)
+    gap_size = 0.05  # Gap between cells in inches (adjust as needed)
+
+    # Calculate total width and height including gaps
+    num_days = len(all_days)
+    num_habits = len(habits_list)
+    total_width = num_days * (cell_size + gap_size) + gap_size
+    total_height = num_habits * (cell_size + gap_size) + gap_size
+
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(total_width, total_height))
+
+    # Draw rectangles for each cell
+    for i in range(num_habits):  # Rows (habits)
+        for j in range(num_days):  # Columns (days)
+            color = "green" if habits_array[i, j] == 1 else "white"
+            # Calculate position with gaps
+            x = j * (cell_size + gap_size) + gap_size
+            y = (num_habits - 1 - i) * (cell_size + gap_size) + gap_size  # Invert y-axis so first habit is at top
+            rect = Rectangle((x, y), cell_size, cell_size, facecolor=color, edgecolor="gray", linewidth=0.5)
+            ax.add_patch(rect)
+
+    # Set axis limits
+    ax.set_xlim(0, total_width)
+    ax.set_ylim(0, total_height)
+
+    # Set y-axis ticks and labels (habits)
+    ax.set_yticks([i * (cell_size + gap_size) + cell_size / 2 for i in range(num_habits)])
+    ax.set_yticklabels(habits_list[::-1])  # Reverse to match top-to-bottom order
+
+    # Set x-axis ticks and labels (days, approximately 10 ticks)
+    tick_interval = max(1, num_days // 10)
+    tick_positions = [j * (cell_size + gap_size) + cell_size / 2 for j in range(0, num_days, tick_interval)]
+    tick_labels = [all_days[j].strftime("%Y-%m-%d") for j in range(0, num_days, tick_interval)]
+    ax.set_xticks(tick_positions)
+    ax.set_xticklabels(tick_labels, rotation=45, ha="right")
+
+    # Add labels and title
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Habit")
+    ax.set_title("Habit Tracker")
+
+    # Remove default grid or background
+    # ax.set_facecolor("white")
+    # plt.tight_layout()
+    plt.show()
+
+
 def last_n_days(records, n):
     """Return only records from the last n days.
 
@@ -210,20 +284,41 @@ def last_n_days(records, n):
     return [r for r in records if r.date >= threshold]
 
 
-def main():
-    file_name = "/home/lyka/.worklog"  # Adjust file path as needed.
-    records = get_records(file_name)
-
-    # Uncomment the plots you want to generate:
+def plot_all(records):
+    plot_habits(records)
     plot_days(records)
     plot_records(records)
     plot_work_time(records)
     plot_places(records)
     plot_subjects(records)
 
-    # Example: Get records from the last 7 days and print how many:
-    recent_records = last_n_days(records, 7)
-    print(f"Records in the last 7 days: {len(recent_records)}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate plots from a worklog file.")
+    parser.add_argument(
+        "plot_type",
+        choices=["days", "records", "work_time", "places", "subjects", "habits", "all"],
+        default="all",
+        help="Type of plot to generate",
+    )
+    parser.add_argument(
+        "--file", default="/home/lyka/.worklog", help="Path to the worklog file (default: /home/lyka/.worklog)"
+    )
+    args = parser.parse_args()
+    records = get_records(args.file)
+    plot_functions = {
+        "days": plot_days,
+        "records": plot_records,
+        "work_time": plot_work_time,
+        "places": plot_places,
+        "subjects": plot_subjects,
+        "habits": plot_habits,
+        "all": plot_all,
+    }
+    if args.plot_type in plot_functions:
+        plot_functions[args.plot_type](records)
+    else:
+        print(f"Unknown plot type: {args.plot_type}. Use one of: {', '.join(plot_functions.keys())}")
 
 
 if __name__ == "__main__":
