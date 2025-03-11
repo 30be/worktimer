@@ -18,3 +18,6 @@ package() {
   install -Dm644 "sounds/string.ogg" "$pkgdir/usr/share/worktimer/sounds/string.ogg"
   install -Dm644 "systemd/worktimer.service" "$pkgdir/usr/lib/systemd/user/worktimer.service"
 }
+
+echo "To enable the worktimer service, run:"
+echo "systemctl --user enable worktimer"

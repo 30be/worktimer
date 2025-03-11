@@ -75,7 +75,9 @@ def read_msg():
 
 def get_actions(state):
     """Generate action parameters for notify-send."""
-    return "--action=Done=Done --action=Skipped=Skipped" if state != State.WORK else "--action=Okay=Okay"
+    if state == State.WORK:
+        return "--action=Okay=Okay"
+    return "--action=Done=Done --action=Skipped=Skipped"
 
 
 def handle_transition(old, new):
