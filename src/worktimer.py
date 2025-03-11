@@ -33,7 +33,12 @@ def take_photo(name):
     """Capture a photo with ffmpeg."""
     output_path = Path.home() / "Pictures/worktimer" / f"{name}.jpg"
     try:
-        subprocess.run(f"ffmpeg -f v4l2 -i /dev/video0 -frames:v 1 {output_path} -y", shell=True, timeout=1.5)
+        subprocess.run(
+            f"ffmpeg -f v4l2 -i /dev/video0 -frames:v 1 {output_path} -y",
+            shell=True,
+            timeout=1.5,
+            stdout=subprocess.DEVNULL,
+        )
     except subprocess.TimeoutExpired as e:
         print("No camera found or too long to take_photo", e)
 
@@ -70,7 +75,7 @@ def read_msg():
 
 def get_actions(state):
     """Generate action parameters for notify-send."""
-    return "--action=" + "=Done --action=".join(ACTIONS[:2]) if state in {State.BIG_REST, State.SMALL_REST} else ""
+    return "--action=Done=Done --action=Skipped=Skipped" if state != State.WORK else "--action=Okay=Okay"
 
 
 def handle_transition(old, new):
