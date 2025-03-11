@@ -1,0 +1,9 @@
+[Unit]
+Description=Work Timer
+
+[Service]
+ExecStart=/usr/bin/worktimer
+Restart=always
+
+[Install]
+WantedBy=default.target
