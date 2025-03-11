@@ -1,7 +1,4 @@
-debug/
-build/
 .cache/
 habits
-worklog
 subjects
 pkg/
