@@ -4,6 +4,9 @@ Description=Work Timer
 [Service]
 ExecStart=/usr/bin/worktimer
 Restart=always
+Environment="DISPLAY=:0"  # For X11; adjust if needed
+Environment="WAYLAND_DISPLAY=wayland-0"  # For Wayland; adjust if needed
+After=graphical-session.target
 
 [Install]
 WantedBy=default.target
