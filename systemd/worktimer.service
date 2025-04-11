@@ -1,12 +1,17 @@
 [Unit]
 Description=Work Timer
+# Ensures this service starts after the main graphical session is ready
+After=graphical-session.target
 
 [Service]
 ExecStart=/usr/bin/worktimer
 Restart=always
-Environment="DISPLAY=:0"  # For X11; adjust if needed
-Environment="WAYLAND_DISPLAY=wayland-0"  # For Wayland; adjust if needed
-After=graphical-session.target
+# Environment variable needed for GUI applications under X11
+# Adjust the display number (:0, :1, etc.) if necessary
+Environment="DISPLAY=:0"
+# Environment variable needed for GUI applications under Wayland
+# Adjust the display name (wayland-0, wayland-1, etc.) if necessary
+Environment="WAYLAND_DISPLAY=wayland-0"
 
 [Install]
 WantedBy=default.target
